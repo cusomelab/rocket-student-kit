@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>쿠팡 로켓 대시보드</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/student.css') }}?v={{ version }}">
+</head>
+<body>
+  <div class="mesh" aria-hidden="true"></div>
+  <div class="app-shell">
+    <div class="app-chrome">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="app-chrome-title">로켓 운영 대시보드</span>
+    </div>
+    <div class="app-body">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">🚀</div>
+      <div>
+        <strong>쿠팡 로켓<br>운영 대시보드</strong>
+        <span>수강생용 {{ version }}</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <button data-tab="new" class="active">신규 상품</button>
+      <button data-tab="poship">발주/쉽먼트</button>
+      <button data-tab="order">발주서 만들기</button>
+      <button data-tab="logs">실행 로그</button>
+      <button data-tab="settings">설정</button>
+    </nav>
+    <div class="side-foot">
+      <div class="chrome-pill" id="chromePill">Chrome 확인 중</div>
+      <button class="btn sm side-hub" id="btnBarcode">바코드·라벨 앱 열기</button>
+      <button class="btn sm ghost side-hub" id="btnHubChrome">허브 Chrome 열기</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <nav class="mobile-nav">
+      <button data-tab="new" class="active">신규 상품</button>
+      <button data-tab="poship">발주/쉽먼트</button>
+      <button data-tab="order">발주서 만들기</button>
+      <button data-tab="logs">실행 로그</button>
+      <button data-tab="settings">설정</button>
+    </nav>
+    <header class="top">
+      <div>
+        <h1 id="pageTitle">신규 상품</h1>
+        <p class="sub" id="pageSub"></p>
+      </div>
+      <div class="top-actions">
+        <button class="btn ghost" id="btnFolder">프로그램 폴더</button>
+        <button class="btn ghost" id="btnSheet">운영 시트</button>
+        <button class="btn" id="btnBarcodeTop">바코드·라벨 앱</button>
+      </div>
+    </header>
+
+    <div id="setupBanner" class="banner warn hidden">
+      <span>처음 쓰시나요? <strong>설정</strong> 탭에서 내 운영 시트 주소와 드라이브 폴더를 먼저 저장해 주세요.</span>
+      <button class="btn sm" data-goto="settings">설정 열기</button>
+    </div>
+    <div id="loginBanner" class="banner warn hidden">
+      Chrome에서 쿠팡에 직접 로그인해 주세요. 프로그램은 로그인 버튼을 누르지 않습니다.
+    </div>
+    <div id="deniedBanner" class="banner danger hidden">
+      Access Denied가 떴습니다. 검은 창은 두고 Chrome 주소창에서 F5만 누르세요.
+    </div>
+    <div id="jobBanner" class="banner info hidden">
+      <span id="jobBannerText">작업 실행 중</span>
+      <button class="btn sm danger" id="btnStop">중단</button>
+    </div>
+
+    <!-- 신규 상품 -->
+    <section class="panel" id="tab-new">
+      <article class="card">
+        <div class="card-h">
+          <h2>공급 SKU 수집</h2>
+          <span class="muted" id="csvMeta"></span>
+        </div>
+        <p class="lead">서플라이어 허브의 공급 SKU 전체를 CSV로 저장하고, 직전 날짜 CSV에 없던 SKU를 신규 상품으로 보여줍니다. 처음 한 번은 비교할 파일이 없어 신규 목록이 비어 있습니다.</p>
+        <div class="run-grid">
+          <button class="run" data-mode="collect">
+            <strong>신규 상품 수집</strong>
+            <span>허브 로그인 후 실행 · 첫 수집은 오래 걸립니다</span>
+          </button>
+        </div>
+        <div class="log-mini" id="liveLog">실행하면 진행 로그가 여기에 표시됩니다.</div>
+      </article>
+      <article class="card">
+        <div class="card-h">
+          <h2>직전 CSV 대비 신규</h2>
+          <div class="top-actions">
+            <span class="muted" id="newMeta"></span>
+            <a class="btn sm ghost" href="/api/new/export">CSV 받기</a>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>사진</th><th>SKU</th><th>상품명</th><th>바코드</th>
+                <th>상태</th><th>BM</th><th>발주담당</th><th>MOQ</th>
+              </tr>
+            </thead>
+            <tbody id="newBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- 발주/쉽먼트 -->
+    <section class="panel hidden" id="tab-poship">
+      <article class="card">
+        <div class="card-h">
+          <h2>발주확정 → 쉽먼트 업로드</h2>
+          <span class="muted">허브 Chrome에서 진행합니다. 로그인 버튼은 누르지 않습니다.</span>
+        </div>
+        <p class="lead">서플라이어 허브에 로그인해 둔 뒤 실행하세요. 확정 후에는 수량·센터를 바꾸기 어렵습니다.</p>
+        <div class="setting-row">
+          <label for="inboundDate">입고예정일</label>
+          <input id="inboundDate" type="date">
+          <span class="muted">기간검색을 이 날짜 → 이 날짜로 맞춘 뒤 검색합니다.</span>
+        </div>
+        <div class="run-grid">
+          <button class="run" data-mode="po_list">
+            <strong>1. 미확정 발주 조회</strong>
+            <span>허브 발주 목록 읽기</span>
+          </button>
+          <button class="run" data-mode="po_confirm">
+            <strong>2. 발주확정</strong>
+            <span>입고예정일 검색 후 확정</span>
+          </button>
+          <button class="run" data-mode="ship_upload">
+            <strong>3. 쉽먼트 업로드</strong>
+            <span>엑셀 파일 업로드</span>
+          </button>
+          <button class="run" data-mode="po_ship">
+            <strong>한 번에 실행</strong>
+            <span>조회 → 확정 → 업로드</span>
+          </button>
+          <button class="run" data-mode="ship_plan">
+            <strong>시트 ①~⑤</strong>
+            <span>리스트업 → 동기화 → 계획 → 정렬 → 예상쉽먼트</span>
+          </button>
+        </div>
+        <div class="top-actions" style="margin-top:12px">
+          <button class="btn ghost" id="btnPoPage">허브 발주 페이지</button>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-h">
+          <h2>미확정 발주</h2>
+          <span class="muted" id="poMeta">아직 조회하지 않았습니다.</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>발주번호</th><th>SKU</th><th>상품명</th>
+                <th>센터</th><th>수량</th><th>입고예정</th><th>상태</th>
+              </tr>
+            </thead>
+            <tbody id="poBody"></tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-h">
+          <h2>업로드할 엑셀</h2>
+          <div class="top-actions">
+            <button class="btn sm ghost" id="btnShipFolder">폴더 열기</button>
+            <button class="btn sm ghost" id="btnDriveList">목록 불러오기</button>
+          </div>
+        </div>
+        <span class="muted" id="shipMeta"></span>
+        <p class="lead">이름에 <code>Shipment_Upload</code> 또는 <code>쉽먼트</code>가 들어간 xlsx만 올립니다. 드라이브 폴더면 <strong>목록 불러오기</strong>를 누르세요.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>파일</th><th>수정</th><th>크기</th></tr></thead>
+            <tbody id="shipBody"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- 발주서 만들기 -->
+    <section class="panel hidden" id="tab-order">
+      <article class="card">
+        <div class="card-h">
+          <h2>발주서 만들기</h2>
+          <span class="muted">발주 시트의 🚀 로켓발주 메뉴를 순서대로 실행합니다.</span>
+        </div>
+        <p class="lead">발주일은 그 주 월요일부터 오늘까지입니다. 허브에서 상품목록을 받아 INBOX 드라이브 폴더에 올린 뒤, 시트 로켓발주를 커밋까지 순서대로 실행합니다.</p>
+        <div class="run-grid">
+          <button class="run" data-mode="order_fill">
+            <strong>한 번에 실행</strong>
+            <span>허브 다운로드 → INBOX → 집계 → 차감 → 채우기 → 커밋</span>
+          </button>
+          <button class="run" data-mode="order_commit">
+            <strong>발주 커밋만</strong>
+            <span>이미 채운 발주서만 확정</span>
+          </button>
+        </div>
+        <div class="top-actions" style="margin-top:12px">
+          <button class="btn ghost" id="btnOrderSheet">시트 열기</button>
+          <button class="btn ghost" id="btnInboxFolder">INBOX 폴더 열기</button>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-h"><h2>순서</h2></div>
+        <ol class="lead" style="margin:0 0 0 18px; line-height:1.8">
+          <li>허브 SKU 목록: 발주일 = 그 주 월요일 ~ 오늘, 전체다운로드</li>
+          <li>INBOX 드라이브 업로드</li>
+          <li>① INBOX 가져오기</li>
+          <li>② RAW 중복 정리</li>
+          <li>③ 미발주 집계 갱신</li>
+          <li>④ 국내/중국 재고 우선 차감</li>
+          <li>발주서 채우기</li>
+          <li>⑤ 발주 커밋</li>
+        </ol>
+      </article>
+    </section>
+
+    <!-- 실행 로그 -->
+    <section class="panel hidden" id="tab-logs">
+      <article class="card">
+        <div class="card-h">
+          <h2>이번 작업 출력</h2>
+          <span class="muted" id="jobLogMeta">대기</span>
+        </div>
+        <pre class="log" id="jobLog"></pre>
+      </article>
+    </section>
+
+    <!-- 설정 -->
+    <section class="panel hidden" id="tab-settings">
+      <article class="card">
+        <div class="card-h">
+          <h2>내 시트 · 폴더</h2>
+          <span class="muted">이 PC에 저장됩니다. 한 번 넣으면 계속 유지됩니다.</span>
+        </div>
+        <div class="setting-row">
+          <label for="setOrderSheet">운영 시트 주소 <span class="req">필수</span></label>
+          <input id="setOrderSheet" type="text" spellcheck="false" placeholder="https://docs.google.com/spreadsheets/d/...">
+          <button class="btn sm ghost" data-open="sheet">열기</button>
+        </div>
+        <div class="setting-row">
+          <label for="setShipFolder">쉽먼트 폴더</label>
+          <input id="setShipFolder" type="text" spellcheck="false" placeholder="드라이브 폴더 주소 또는 PC 폴더 (비우면 프로그램 폴더\쉽먼트)">
+          <button class="btn sm ghost" data-open="ship_folder">열기</button>
+        </div>
+        <div class="setting-row">
+          <label for="setInboxFolder">INBOX 폴더</label>
+          <input id="setInboxFolder" type="text" spellcheck="false" placeholder="https://drive.google.com/drive/folders/...">
+          <button class="btn sm ghost" data-open="inbox_folder">열기</button>
+        </div>
+        <div class="setting-row">
+          <label for="setBarcodeUrl">바코드·라벨 앱</label>
+          <input id="setBarcodeUrl" type="text" spellcheck="false" placeholder="강사에게 받은 앱 주소 (https://...streamlit.app)">
+        </div>
+        <div class="top-actions" style="margin-top:14px">
+          <button class="btn primary" id="btnSaveSettings">저장</button>
+        </div>
+      </article>
+      <article class="card">
+        <div class="card-h"><h2>처음 준비</h2></div>
+        <ol class="lead" style="margin:0 0 0 18px; line-height:1.8">
+          <li>강사가 공유한 <strong>운영 시트 템플릿</strong>을 <em>파일 → 사본 만들기</em>로 내 드라이브에 복사합니다.</li>
+          <li>복사한 시트 주소를 위 <strong>운영 시트 주소</strong>에 붙여 넣습니다.</li>
+          <li>구글 드라이브에 <strong>INBOX</strong>, <strong>쉽먼트</strong> 폴더를 만들고 주소를 붙여 넣습니다.</li>
+          <li>왼쪽 아래 <strong>허브 Chrome 열기</strong>를 눌러 뜬 Chrome에서 쿠팡 서플라이어 허브와 구글에 로그인합니다.</li>
+        </ol>
+        <p class="muted" style="margin-top:10px">허브 Chrome은 이 프로그램 폴더의 <code>chrome_profile</code>에 로그인을 저장합니다. 평소 쓰는 Chrome과 따로 동작합니다.</p>
+      </article>
+    </section>
+  </main>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}?v={{ version }}"></script>
+</body>
+</html>

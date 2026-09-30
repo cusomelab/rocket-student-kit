@@ -1,0 +1,5 @@
+/* 수강생용 추가 스타일. app.css(원본 디자인)는 건드리지 않고 여기에만 덧붙인다. */
+.card-h .top-actions { align-items: center; }
+.setting-row input[type="text"] { flex: 1; min-width: 0; }
+.banner .btn { flex-shrink: 0; }
+.req { font-size: 10px; background: #fee2e2; color: #b91c1c; border-radius: 999px; padding: 1px 6px; margin-left: 4px; }

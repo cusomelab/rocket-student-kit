@@ -1,0 +1,15 @@
+# 상한을 둔 이유: Streamlit Cloud는 재배포/재시작마다 이 파일대로 다시 설치한다.
+# 버전을 안 묶어두면 어느 날 메이저 버전이 올라오면서 앱이 통째로 안 뜰 수 있다.
+# (아래 조합은 2026-08 기준 실제 구동 확인: streamlit 1.62 / pandas 3.0 / reportlab 5.0)
+streamlit>=1.40,<2
+Pillow>=10,<14
+python-barcode>=0.15,<1
+openpyxl>=3.1,<4
+reportlab>=4.0,<6
+pypdf>=4.0,<7
+pdfplumber>=0.11,<1
+pypdfium2>=4.0,<6
+pandas>=2.2,<4
+gspread>=6.0.0,<7
+google-auth>=2.25.0,<3
+edge-tts>=7.0.0,<8

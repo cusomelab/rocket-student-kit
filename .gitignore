@@ -1,0 +1,17 @@
+# 사람마다 다른 데이터 — 저장소에 올리지 않는다
+settings.json
+chrome_profile/
+쉽먼트/
+_ship_dl/
+_order_inbox_dl/
+쿠팡_공급SKU_*.csv
+sku_detail_cache.json
+po_pending.json
+po_apis.json
+drive_ship_cache.json
+*_debug.png
+__pycache__/
+*.pyc
+service_account.json
+barcode/.streamlit/secrets.toml
+barcode/.tts_cache/
