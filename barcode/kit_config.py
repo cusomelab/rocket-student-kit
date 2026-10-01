@@ -21,11 +21,40 @@ SESSION_KEY = "kit_settings"
 
 # ── 저장소 ────────────────────────────────────────────────
 def is_web() -> bool:
-    """관리용 시트가 비밀설정에 있으면 웹(로그인) 모드."""
+    """기본은 웹(로그인) 모드. PC에서 로그인 없이 쓰려면 ROCKET_KIT_LOCAL=1 로 실행한다.
+
+    Secrets 를 못 읽었다고 로그인 없이 열리면 안 되므로, 실패해도 웹 모드로 두고
+    kit_ui.require_login() 이 오류를 보여주고 멈춘다.
+    """
+    import os
+    return os.environ.get("ROCKET_KIT_LOCAL") != "1"
+
+
+def secrets_problem() -> str:
+    """웹 모드에 필요한 Secrets 가 제대로 있는지. 문제 없으면 빈 문자열."""
     try:
-        return bool(st.secrets.get("admin_sheet_url"))
-    except Exception:  # secrets.toml 없음 → PC 모드
-        return False
+        if not st.secrets.get("admin_sheet_url"):
+            return "admin_sheet_url 이 없습니다."
+        admin = st.secrets.get("admin") or {}
+        if not admin.get("id") or not admin.get("password"):
+            return "[admin] 아래 id / password 가 없습니다."
+    except Exception as e:
+        return f"Secrets 형식 오류 ({_where(e)}) — 따옴표·줄바꿈을 확인하세요."
+    try:
+        import accounts
+        info = accounts.service_account_info()
+        if not info.get("client_email") or not info.get("private_key"):
+            return "서비스 계정 키에 client_email / private_key 가 없습니다."
+    except Exception as e:
+        return f"서비스 계정 키를 읽지 못했습니다 ({_where(e)}) — credentials.json 내용을 그대로 붙였는지 확인하세요."
+    return ""
+
+
+def _where(e: Exception) -> str:
+    """오류 위치만. 메시지 원문에는 키 일부가 섞일 수 있어 보여주지 않는다."""
+    import re
+    m = re.search(r"line\s*(\d+)", str(e))
+    return f"{type(e).__name__}, {m.group(1)}번째 줄" if m else type(e).__name__
 
 
 def _load_local() -> dict:

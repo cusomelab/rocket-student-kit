@@ -16,6 +16,12 @@ def require_login() -> None:
     """웹 모드에서 로그인하지 않았으면 로그인 화면을 보여주고 멈춘다."""
     if not kit_config.is_web():
         return
+    problem = kit_config.secrets_problem()
+    if problem:
+        st.title("🚀 로켓배송 운영 관리")
+        st.error("관리자 설정(Secrets) 오류로 앱을 열 수 없습니다. 강사에게 문의하세요.")
+        st.caption(f"원인: {problem}")
+        st.stop()
     if st.session_state.get("auth_user"):
         _sidebar_user()
         return
