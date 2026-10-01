@@ -34,7 +34,8 @@ def secrets_problem() -> str:
     """웹 모드에 필요한 Secrets 가 제대로 있는지. 문제 없으면 빈 문자열."""
     try:
         if not st.secrets.get("admin_sheet_url"):
-            return "admin_sheet_url 이 없습니다."
+            names = ", ".join(sorted(st.secrets.keys())) or "(하나도 없음)"
+            return f"admin_sheet_url 이 없습니다. 앱이 읽은 설정 이름: {names}"
         admin = st.secrets.get("admin") or {}
         if not admin.get("id") or not admin.get("password"):
             return "[admin] 아래 id / password 가 없습니다."
