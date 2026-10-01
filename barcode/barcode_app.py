@@ -1710,10 +1710,11 @@ def get_gsheet_client():
         key_path = kit_config.service_account_path()
         if key_path.exists():
             creds = Credentials.from_service_account_file(str(key_path), scopes=scopes)
-        # 2순위: Streamlit Secrets (secrets.toml 이 없으면 FileNotFoundError)
-        elif "gcp_service_account" in st.secrets:
+        # 2순위: Streamlit Secrets (JSON 통째로 또는 [gcp_service_account] 표)
+        elif kit_config.is_web() or "gcp_service_account" in st.secrets:
+            import accounts
             creds = Credentials.from_service_account_info(
-                dict(st.secrets["gcp_service_account"]), scopes=scopes
+                accounts.service_account_info(), scopes=scopes
             )
         else:
             return None

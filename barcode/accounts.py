@@ -6,8 +6,7 @@
     [admin]
     id = "admin"
     password = "..."                                                 # 관리자 로그인
-    [gcp_service_account]
-    ...                                                              # 서비스 계정 키
+    gcp_service_account_json = '''{ ...credentials.json 내용 그대로... }'''  # 서비스 계정 키
 
 관리용 시트의 탭 (없으면 자동으로 만든다):
     계정: 아이디 | 이름 | 비밀번호 | 권한 | 사용 | 만든날 | 마지막로그인
@@ -60,7 +59,7 @@ def _client():
     from google.oauth2.service_account import Credentials
 
     creds = Credentials.from_service_account_info(
-        dict(st.secrets["gcp_service_account"]),
+        service_account_info(),
         scopes=["https://www.googleapis.com/auth/spreadsheets",
                 "https://www.googleapis.com/auth/drive"],
     )
@@ -69,9 +68,28 @@ def _client():
     return client
 
 
+def service_account_info() -> dict:
+    """Secrets 의 서비스 계정 키.
+
+    - gcp_service_account_json = '''(credentials.json 내용 그대로)'''   ← 붙여 넣기만 하면 됨
+    - [gcp_service_account] 표 형식도 그대로 지원
+    """
+    raw = st.secrets.get("gcp_service_account_json")
+    if raw:
+        return json.loads(raw) if isinstance(raw, str) else dict(raw)
+    return dict(st.secrets["gcp_service_account"])
+
+
+def has_service_account() -> bool:
+    try:
+        return bool(st.secrets.get("gcp_service_account_json") or "gcp_service_account" in st.secrets)
+    except Exception:
+        return False
+
+
 def service_email() -> str:
     try:
-        return st.secrets["gcp_service_account"]["client_email"]
+        return service_account_info().get("client_email", "")
     except Exception:
         return ""
 
